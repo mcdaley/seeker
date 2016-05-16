@@ -1,116 +1,88 @@
 # Seeker
 
+## Description
+
 The Seeker gem provides a standard interface for interacting with job search sites. The
 user can instantiate an instance of a job search site and then run a simple search
-with a description, location, page number, and number of jobs per page.
-
-The API returns a standard ruby hash that contains the same fields for each job site
-and it also handles all of the error conditions. The current supported job sites are
-
-1. Indeed.com
-2. CareerBuilder.com
-
-## Installation
-
-You will need to install the gem from the github source code, since it is not
-deployed to rubygems.org. To download the latest release you can use one of the 
-two options below:
-
-1. Install from the master branch
-
-```ruby
-gem 'seeker', git: 'git://github.com/mcdaley/budman', branch: 'master'
-```
-
-You can also specify a specific release by adding the version
-
-```ruby
-gem 'seeker', '0.0.[1-99]', git: 'git://github.com/mcdaley/budman', branch: 'master'
-```
-
-2. Install from a commit reference point. You can determine the latest commit
-reference number by running the glog command which is an alias for git log defined 
-below:
-
-```ruby
-alias glog='git log --pretty=format:"%h - %an, %ar : %s"'
-```
-
-To install a specific reference of the gem, use the first column of the output 
-from the glog command, which is the github reference. This method is the most
-flexible when working with a gem that is changing very frequently. When specifying 
-a branch, release number, or tag then bundler will not update the gem until the 
-version or the tag has been updated.
-
-```ruby
-gem 'seeker',     git: 'git://github.com/mcdaley/budman', ref: 'b12e16f'
-```
-
-3. Install from a tag, which is not specified here - look at bundler documentation
-
-And then execute:
-
-    $ bundle
-
-Or install it yourself as:
-
-    $ gem install seeker
+with a description, location or the user can run advanced job search and specify radius 
+to search, number of days posted, and boolean search logic to use for matching the 
+description. The gem currently supports running Dice jobs
 
 ## Usage
 
-1. Get list of supported job search sites (Not Implemented)
+Create instances of job search site
+
 ```ruby
-sites = Seeker.sites
+dice = Seeker::Dice.new
 ```
 
-2. Create instances of job search site
+### Run simple search query for each site
+To run a simple search, just call search with a description and location.
+
 ```ruby
-indeed = Seeker::Indeed.new
+response = dice.search("Description", "Location")
 ```
 
-3. Run search query for each site
+### Run advanced search
+To better narrow the job search results run an advanced search, where the
+user can specify:
+
+|Parameter    |Description|
+|:------------|:----------|
+|description  |Job, title, skills, or company|
+|boolean_opr  |Match __all__ words, __any___ words, or __exact phrase__ in description|
+|location     |City, state, or zip code|
+|radius       |Distance from location in miles to include in search results|
+|fromage      |Include jobs posted within fromage days|
+|job_type     |Select job type (i.e., fulltime, parttime,contract, internship, temporary)
+
+For example, to search for jobs that are within 5 miles of "94105" and posted less than
+7 days ago:
+
 ```ruby
-response = indeed.search("Description", "Location")
+params    = { description: "JavaScript", location: "94105", radius: "5", fromage: "7"}
+response  = dice.advanced_search(params)
 ```
 
-4. Get response as a ruby hash 
+### Search results
+The search and advanced_search methods return a standard response message that contains
+the status of the job search and the jobs, if the result was ok. The message is a standard
+ruby hash with a header and a body.
+
+The format of the hash is:
+
 ```ruby
-message  = response.message if response.ok?
-```
-
-The format of the hash is
-
 message = {
   header: {
     http:           { code:, msg: },
     error:          { code:, msg: },
     total_results:,
     description:,
-    location:_
+    location:
   },
   body: {
     jobs: []
   }
 }
+```
 
 The search was successful if the error[:code] = 0 and the http[:code] = 200
 
+### Example
+Run a simple search, validate the response, and retrieve the jobs
+
+```ruby
+dice      = Seeker::Dice.new
+response  = dice.search("JavaScript", "San Francisco, CA")
+msg       = response.msg
+header    = msg[:header]
+jobs      = msg[:body][:jobs]
+
+puts "First job is #{jobs[0][:title]}, at #{jobs[0].company}"
+```
 
 ## To Do
-1. Add PRIVATE respository to github
 
-2. Plug into dogpatch
-
-3. Make gem configurable through railties and some sort of configuration. Need
-   to look at the Twilio gem because of the article that discussed using 
-   environment variables. I can probably use one of the gems discussed in the
-   article.
-
-4. Add logging that can integrate with rails logging
-
-5. Try to get rid of the DB table for managing job search sites
-
-6. Check to see where i normalize the page, offset, and per_page
 
 ## Contributing
 
