@@ -30,7 +30,7 @@ user can specify:
 |Parameter    |Description|
 |:------------|:----------|
 |description  |Job, title, skills, or company|
-|boolean_opr  |Match __all__ words, __any___ words, or __exact phrase__ in description|
+|boolean_opr  |Match __all__ words, __any__ words, or __exact phrase__ in description|
 |location     |City, state, or zip code|
 |radius       |Distance from location in miles to include in search results|
 |fromage      |Include jobs posted within fromage days|
